@@ -11,5 +11,7 @@ module RedmineUserAccounts
     render_on :view_my_account_contextual,
       :partial => 'hooks/redmine_account_policy/view_my_account_contextual'
 
+    render_on :view_users_form,
+      :partial => 'hooks/redmine_account_policy/view_my_expiration_date'
   end
 end

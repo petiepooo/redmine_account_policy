@@ -14,7 +14,7 @@ module RedmineAccountPolicy
         include PluginSettingsMethods
         def run_account_policy_daily_tasks
           Rails.logger.info { "#{Time.now.utc}: Account Policy: Running daily tasks" }
-          
+
           lock_expired_accounts!            # lock expired accounts
           expire_old_passwords!             # password expiry
           lock_unused_accounts!             # lock unused accounts
@@ -28,15 +28,10 @@ module RedmineAccountPolicy
           #only run on active users
           User.where(type: 'User', status: [User::STATUS_REGISTERED, User::STATUS_ACTIVE]).each do |user|
             if user.expiry_date != nil && user.expiry_date <= Date.today
-            user.lock!
+              user.lock!
+            end
           end
-        end 
         end
-
-        #def days_left_for_expiration_date(user)
-         # ((user.expiry_date) - Date.today)
-         # (user.expiry_date).to_
-       # end 
 
         # enable must_change_passwd for all expired users.
         def expire_old_passwords!

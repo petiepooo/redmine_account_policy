@@ -1,0 +1,4 @@
+<p>
+<label for='issue_expiry_date'><%= l(:rap_field_expiry_date) %></label>
+<%= date_field_tag 'issue[expiry_date]', '', :value => '', :size => 10 %><%= calendar_for('issue_expiry_date') %>
+</p>

@@ -54,6 +54,42 @@ class AccountControllerTest < ActionController::TestCase
   end
 
 
+  # tests that user gets locked if expiration date is today
+  test "cron_locks_user_when_on_expiration_date" do
+    mock_user.update_column(:expiry_date, Date.today)
+    run_daily_cron_with_reset
+    assert mock_user.locked?,
+       "Daily cron locked unused user - #{mock_user.inspect}"
+  end
+
+
+  # tests that user gets locked if expiration date has passed
+  test "cron_locks_user_when_past_expiration_date" do
+    mock_user.update_column(:expiry_date, Date.today - 1.days)
+    run_daily_cron_with_reset
+    assert mock_user.locked?,
+      "Daily cron locked unused user - #{mock_user.inspect}"
+  end
+
+
+  # tests that user is not locked if expiry date not yet reached
+  test "cron_does_not_lock_user_before_expiration_date" do
+    mock_user.update_column(:expiry_date, Date.today + 1.days)
+    run_daily_cron_with_reset
+    refute mock_user.locked?,
+      "Daily cron locked unused user - #{mock_user.inspect}"
+  end
+
+
+  # tests that user is not locked if has no expiration date
+  test "cron_does_not_lock_user_if_no_expiration_date" do
+    mock_user.update_column(:expiry_date, nil)
+    run_daily_cron_with_reset
+    refute mock_user.locked?,
+      "Daily cron locked unused user - #{mock_user.inspect}"
+  end
+
+
   # tests that repeated daily crons do not lock unused accounts
   test "repeated_crons_do_not_lock_unused_accounts" do
     set_plugin_setting(:unused_account_max_age, @max_age)

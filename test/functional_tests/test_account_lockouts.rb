@@ -54,39 +54,35 @@ class AccountControllerTest < ActionController::TestCase
   end
 
 
-  # tests that user gets locked if expiration date is today
-  test "cron_locks_user_when_on_expiration_date" do
+  test "cron_locks_user_todays_expired_accounts" do
     mock_user.update_column(:expiry_date, Date.today)
     run_daily_cron_with_reset
     assert mock_user.locked?,
-       "Daily cron locked unused user - #{mock_user.inspect}"
+       "Daily cron locked expired user on expiration date - #{mock_user.inspect}"
   end
 
 
-  # tests that user gets locked if expiration date has passed
-  test "cron_locks_user_when_past_expiration_date" do
+  test "cron_locks_user_past_expiry_date" do
     mock_user.update_column(:expiry_date, Date.today - 1.days)
     run_daily_cron_with_reset
     assert mock_user.locked?,
-      "Daily cron locked unused user - #{mock_user.inspect}"
+      "Daily cron locked expired user on past expiration date - #{mock_user.insepct}"
   end
 
 
-  # tests that user is not locked if expiry date not yet reached
-  test "cron_does_not_lock_user_before_expiration_date" do
+  test "cron_does_not_lock_user_expiry_date" do
     mock_user.update_column(:expiry_date, Date.today + 1.days)
     run_daily_cron_with_reset
     refute mock_user.locked?,
-      "Daily cron locked unused user - #{mock_user.inspect}"
+      "Daily cron did not lock user  - #{mock_user.insepct}"
   end
 
 
-  # tests that user is not locked if has no expiration date
-  test "cron_does_not_lock_user_if_no_expiration_date" do
+  test "cron_does_not_lock_user_noexpdate" do
     mock_user.update_column(:expiry_date, nil)
     run_daily_cron_with_reset
     refute mock_user.locked?,
-      "Daily cron locked unused user - #{mock_user.inspect}"
+      "Daily cron locked user: No expiry date - #{mock_user.insepct}"
   end
 
 

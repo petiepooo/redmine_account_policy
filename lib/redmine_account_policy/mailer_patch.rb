@@ -24,6 +24,20 @@ module RedmineAccountPolicy
           mail to: recipients, subject: l(:rap_mail_subject_login_lockout)
         end
 
+#########################################MY CODE###############################
+/         def notify_account_expiry(user, ip_address)
+          notify_user=Setting.plugin_redmine_account_policy[:notify_on_lockout] 
+          #double check the :notify_on_lockout
+          set_instance_variables(user, ip_address)
+
+          recipients = User.active.select { |u| u.admin? }.map(&:mail)
+
+          recipients << user.mail if notify_user == 'on'
+
+          mail to: recipients, subject: l(:rap_mail_subject_expired_account)
+        end 
+/
+
         def notify_password_warn_expiry(user, days_left)
           @user = user
 
@@ -31,6 +45,11 @@ module RedmineAccountPolicy
             subject: l(:rap_mail_subject_warn_expiry, days_left: days_left)
         end
 
+        def notify_account_expiry(user) 
+          @user = user 
+          mail to: user.mail, subject: l(:rap_mail_subject_expired_account)
+        end 
+        
         def notify_password_is_expired(user)
           @user = user
           mail to: user.mail, subject: l(:rap_mail_subject_warn_expiry)

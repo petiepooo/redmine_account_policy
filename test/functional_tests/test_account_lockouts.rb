@@ -58,7 +58,7 @@ class AccountControllerTest < ActionController::TestCase
     mock_user.update_column(:expiry_date, Date.today)
     run_daily_cron_with_reset
     assert mock_user.locked?,
-       "Daily cron locked expired user on expiration date - #{mock_user.inspect}"
+      "Daily cron locked expired user on expiration date - #{mock_user.inspect}"
   end
 
 
@@ -66,15 +66,15 @@ class AccountControllerTest < ActionController::TestCase
     mock_user.update_column(:expiry_date, Date.today - 1.days)
     run_daily_cron_with_reset
     assert mock_user.locked?,
-      "Daily cron locked expired user on past expiration date - #{mock_user.insepct}"
+      "Daily cron locked expired user on past expiration date - #{mock_user.inspect}"
   end
 
 
   test "cron_does_not_lock_user_expiry_date" do
     mock_user.update_column(:expiry_date, Date.today + 1.days)
     run_daily_cron_with_reset
-    refute mock_user.locked?,
-      "Daily cron did not lock user  - #{mock_user.insepct}"
+    refute mock_user.locked?, 
+      "Daily cron did not lock user - #{mock_user.inspect}"
   end
 
 
@@ -82,9 +82,57 @@ class AccountControllerTest < ActionController::TestCase
     mock_user.update_column(:expiry_date, nil)
     run_daily_cron_with_reset
     refute mock_user.locked?,
-      "Daily cron locked user: No expiry date - #{mock_user.insepct}"
+      "Daily cron locked user: No expiry date - #{mock_user.inspect}"
   end
 
+  #######################MY CODE FOR MAILER TESTING ###########################
+  #tests that an email is sent on expiry date, if expiry date is set 
+  test "cron_sent_mail_on_expiry_date_if_set" do #this test case is working 
+    mock_user.update_column(:expiry_date, Date.today)
+    run_daily_cron_with_reset
+    refute ActionMailer::Base.deliveries.empty?,
+      "Should have sent mail: Expiry Date = today"
+  end 
+
+
+  #tests that an email is not sent on past expiry dates
+  test "cron_did_not_send_mail_expiry_date_has_already_passed" do 
+    mock_user.update_column(:expiry_date, Date.today - 1.days)
+    run_daily_cron_with_reset
+    refute ActionMailer::Base.deliveries.empty?,
+      "Should have sent mail: Expiry Date = Yesterday"
+  end 
+
+
+  # tests that an email is not sent for future expiry dates
+  test "cron_did_not_send_mail_expiry_date_in_future" do
+    mock_user.update_column(:expiry_date, Date.today + 1.days)
+    run_daily_cron_with_reset
+    assert ActionMailer::Base.deliveries.empty?, 
+      "Should not have sent mail: Expiry Date == Tomarrow"
+  end 
+
+
+  #tests that an email is not sent for no expiry date set 
+  test "cron_did_not_send_mail_expiry_date_is_nil" do 
+    mock_user.update_column(:expiry_date, nil)
+    run_daily_cron_with_reset
+    assert ActionMailer::Base.deliveries.empty?,
+      "Should not have sent mail regarding account expiry, future expiry date"
+  end
+
+
+  #tests that one email is recieved everytime daily cron runs 
+  test "cron_sends_one_email_regarding_expiry_date" do 
+    mock_user.update_column(:expiry_date, Date.today)
+    run_daily_cron_with_reset
+    @cron_repeats.times{ run_daily_cron }
+    assert ActionMailer::Base.deliveries.size>=1,
+      "Should have sent mail regarding account expiry, only once"
+  end 
+
+
+  #############################################################################
 
   # tests that repeated daily crons do not lock unused accounts
   test "repeated_crons_do_not_lock_unused_accounts" do
@@ -434,16 +482,31 @@ class AccountControllerTest < ActionController::TestCase
     are_recipients_correct?(@to_array, ActionMailer::Base.deliveries.last)
   end
 
-  # tests that no email is sent to the user
-  # on max fails attempts reached if the setting is off
+
   test "no_mail_sent_to_user_on_max_fails_if_setting_off" do
     set_plugin_setting(:notify_on_lockout, 'off')
 
     make_bad_login_attempts_until_one_before(@attempts + 1)
 
-    lockout_mail = ActionMailer::Base.deliveries.last
-
-    assert !lockout_mail.bcc.include?(@alice.mail)
+    refute all_mail_recipients.include?(@alice.mail)
     "Should not have user as recipient after failed login if setting off"
   end
-end
+
+
+  /
+  # tests that no email is sent to the user
+  # on max fails attempts reached if the setting is off
+  test "no_mail_sent_to_user_on_max_fails_if_setting_off" do
+  set_plugin_setting(:notify_on_lockout, 'off')
+
+  make_bad_login_attempts_until_one_before(@attempts + 1)
+
+  lockout_mail = ActionMailer::Base.deliveries.last
+
+  puts lockout_mail.class
+
+  assert !lockout_mail.bcc.include?(@alice.mail)
+  "Should not have user as recipient after failed login if setting off"
+  end
+  /
+end 

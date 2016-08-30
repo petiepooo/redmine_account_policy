@@ -21,6 +21,7 @@ module TestSetupMethods
     set_plugin_setting(:notify_on_lockout, 0)
     set_plugin_setting(:unused_account_max_age, 0)
     set_plugin_setting(:account_policy_checked_on, nil )
+    set_plugin_setting(:notify_on_expiry, 0)
   end
 
   def create_user(login, pwd, email)

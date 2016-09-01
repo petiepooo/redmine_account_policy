@@ -26,11 +26,10 @@ module RedmineAccountPolicy
 
         def lock_expired_accounts!
           #only run on active users
-          User.where(type: 'User', status: [User::STATUS_REGISTERED, User::STATUS_ACTIVE]).each do |user|
-            if user.expiry_date != nil && user.expiry_date <= Date.today
+         User.where(type: 'User', status: [User::STATUS_REGISTERED, User::STATUS_ACTIVE]).each do |user|
+             if user.account_expiry_enabled? && user.expiry_date <= Date.today
               user.lock!
-               Mailer.notify_account_expiry(user).deliver
-              # Mailer.notify_password_is_expired(user).deliver
+              Mailer.notify_account_expiry(user).deliver
             end
           end
         end
@@ -48,7 +47,7 @@ module RedmineAccountPolicy
 
         def lock_unused_accounts!
           User.where(type: 'User', status: [User::STATUS_REGISTERED, User::STATUS_ACTIVE]).each do |user|
-            if user.account_unused?
+            if user.account_unused? && !user.account_expiry_enabled?
               user.update_attribute(:must_change_passwd, true) if user.password_expired?
               user.lock!
             end

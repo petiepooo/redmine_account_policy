@@ -85,7 +85,7 @@ class AccountControllerTest < ActionController::TestCase
       "Daily cron locked user: No expiry date - #{mock_user.inspect}"
   end
 
-  #######################MY CODE FOR MAILER TESTING ###########################
+
   #tests that an email is sent on expiry date, if expiry date is set 
   test "cron_sent_mail_on_expiry_date_if_set" do #this test case is working 
     mock_user.update_column(:expiry_date, Date.today)
@@ -131,8 +131,6 @@ class AccountControllerTest < ActionController::TestCase
       "Should have sent mail regarding account expiry, only once"
   end 
 
-
-  #############################################################################
 
   # tests that repeated daily crons do not lock unused accounts
   test "repeated_crons_do_not_lock_unused_accounts" do

@@ -58,7 +58,7 @@ class AccountControllerTest < ActionController::TestCase
     mock_user.update_column(:expiry_date, Date.today)
     run_daily_cron_with_reset
     assert mock_user.locked?,
-      "Daily cron locked expired user on expiration date - #{mock_user.inspect}"
+      "Daily cron locked user: Expiry Date = today - #{mock_user.inspect}"
   end
 
 
@@ -66,7 +66,7 @@ class AccountControllerTest < ActionController::TestCase
     mock_user.update_column(:expiry_date, Date.today - 1.days)
     run_daily_cron_with_reset
     assert mock_user.locked?,
-      "Daily cron locked expired user on past expiration date - #{mock_user.inspect}"
+      "Daily cron locked user: Expiry Date = Yesterday  - #{mock_user.inspect}"
   end
 
 
@@ -74,7 +74,7 @@ class AccountControllerTest < ActionController::TestCase
     mock_user.update_column(:expiry_date, Date.today + 1.days)
     run_daily_cron_with_reset
     refute mock_user.locked?, 
-      "Daily cron did not lock user - #{mock_user.inspect}"
+      "Daily cron did not lock user: Expiry Date = Future - #{mock_user.inspect}"
   end
 
 
@@ -82,7 +82,7 @@ class AccountControllerTest < ActionController::TestCase
     mock_user.update_column(:expiry_date, nil)
     run_daily_cron_with_reset
     refute mock_user.locked?,
-      "Daily cron locked user: No expiry date - #{mock_user.inspect}"
+      "Daily cron did not lock user: No expiry date - #{mock_user.inspect}"
   end
 
 
@@ -109,7 +109,7 @@ class AccountControllerTest < ActionController::TestCase
     mock_user.update_column(:expiry_date, Date.today + 1.days)
     run_daily_cron_with_reset
     assert ActionMailer::Base.deliveries.empty?, 
-      "Should not have sent mail: Expiry Date == Tomarrow"
+      "Should not have sent mail: Expiry Date = Tomarrow"
   end 
 
 
@@ -118,7 +118,7 @@ class AccountControllerTest < ActionController::TestCase
     mock_user.update_column(:expiry_date, nil)
     run_daily_cron_with_reset
     assert ActionMailer::Base.deliveries.empty?,
-      "Should not have sent mail regarding account expiry, future expiry date"
+      "Should not have sent mail: Expiry Date was not set"
   end
 
 
@@ -128,7 +128,7 @@ class AccountControllerTest < ActionController::TestCase
     run_daily_cron_with_reset
     @cron_repeats.times{ run_daily_cron }
     assert ActionMailer::Base.deliveries.size>=1,
-      "Should have sent mail regarding account expiry, only once"
+      "Should have sent one mail regarding account expiration"
   end 
 
 

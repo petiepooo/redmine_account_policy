@@ -68,7 +68,7 @@ en:
   rap_setting_unused_account_max_age: 'Deactivate accounts not used for'
 
     # == expired accounts == #
-  rap_mail_subject_expired_account:   'Your account "%{name}" [%{login}] has been locked, please speak to your manager to gain access to your account.' 
+    # rap_mail_subject_expired_account:   'Your account "%{name}" [%{login}] has been locked, please speak to your manager to gain access to your account.' 
 
     # == daily cron == #
   rap_setting_account_policy_checked_on: 'Account policies last checked on'

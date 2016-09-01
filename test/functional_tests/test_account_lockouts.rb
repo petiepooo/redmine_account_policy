@@ -490,21 +490,4 @@ class AccountControllerTest < ActionController::TestCase
     "Should not have user as recipient after failed login if setting off"
   end
 
-
-  /
-  # tests that no email is sent to the user
-  # on max fails attempts reached if the setting is off
-  test "no_mail_sent_to_user_on_max_fails_if_setting_off" do
-  set_plugin_setting(:notify_on_lockout, 'off')
-
-  make_bad_login_attempts_until_one_before(@attempts + 1)
-
-  lockout_mail = ActionMailer::Base.deliveries.last
-
-  puts lockout_mail.class
-
-  assert !lockout_mail.bcc.include?(@alice.mail)
-  "Should not have user as recipient after failed login if setting off"
-  end
-  /
 end 

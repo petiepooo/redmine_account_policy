@@ -6,7 +6,7 @@ class MailerTest < ActionMailer::TestCase
 
   def setup
     @mock_user_login = 'alice'
-    @mock_user_login = '1234567890'
+    #@mock_user_login = '1234567890'
     @mock_user_mail = 'alice@doe.com'
     @mock_user_ip = '127.0.0.1'
 
@@ -15,7 +15,7 @@ class MailerTest < ActionMailer::TestCase
 
   # tests if email sent on function call
   test "notify_login_failure" do
-    mail = Mailer.notify_login_failure(User.find_by_login(@mock_user_login), 
+    mail = Mailer.notify_login_failure(User.find_by_login(@mock_user_login),
                                        @mock_user_ip).deliver
 
     if Setting.bcc_recipients == '1'
@@ -32,9 +32,9 @@ class MailerTest < ActionMailer::TestCase
   # tests if email sent on function call and sent to admins
   test "notify_account_lockout" do
     Setting.plugin_redmine_account_policy.update({notify_on_lockout: 'on'})
-    mail = Mailer.notify_account_lockout(User.find_by_login(@mock_user_login), 
+    mail = Mailer.notify_account_lockout(User.find_by_login(@mock_user_login),
                                          @mock_user_ip).deliver
-    admins = User.active.select { |u| u.admin? }.map(&:mail) 
+    admins = User.active.select { |u| u.admin? }.map(&:mail)
     if Setting.bcc_recipients == '1'
       assert mail.bcc.include?(@mock_user_mail),
         'LOCKOUT bcc recipient should be equal to user_mail' + mail.inspect

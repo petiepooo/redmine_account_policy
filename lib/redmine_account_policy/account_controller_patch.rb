@@ -15,7 +15,7 @@ module RedmineAccountPolicy
           expire_old_passwords!             # password expiry
           lock_unused_accounts!             # lock unused accounts
           purge_expired_invalid_credentials # failed logins
-          send_expiration_warnings          # expiration warnings	
+          send_expiration_warnings          # expiration warnings
 
           Setting.plugin_redmine_account_policy.update({account_policy_checked_on: Date.today.strftime("%Y-%m-%d")})
         end
@@ -24,10 +24,10 @@ module RedmineAccountPolicy
         def expire_old_passwords!
           User.where(type: 'User', must_change_passwd: false).each do |user|
             if user.password_expired?
-              user.update_attribute(:must_change_passwd, true) 
+              user.update_attribute(:must_change_passwd, true)
               #send expiration notification email
-              Mailer.notify_password_is_expired(user).deliver 
-            end			
+              Mailer.notify_password_is_expired(user).deliver
+            end
           end
         end
 
@@ -54,9 +54,9 @@ module RedmineAccountPolicy
         end
 
         def send_expiration_warnings
-          @password_max_age = Setting.plugin_redmine_account_policy[:password_max_age].to_i.days  	
+          @password_max_age = Setting.plugin_redmine_account_policy[:password_max_age].to_i.days
 
-          @warn_threshold = Setting.plugin_redmine_account_policy[:password_expiry_warn_days].to_i 
+          @warn_threshold = Setting.plugin_redmine_account_policy[:password_expiry_warn_days].to_i
 
           # only run on unlocked users
           User.where(type: 'User', status: [User::STATUS_REGISTERED, User::STATUS_ACTIVE]).each do |user|
@@ -64,16 +64,16 @@ module RedmineAccountPolicy
             if days_before_expiry(user) <= @warn_threshold && days_before_expiry(user) > 0
               if should_send_warning?(user)
                 # send the expiration warning email unless their password has already expired
-                send_warning_password_expiry_mail(user) unless user.password_expired?	
+                send_warning_password_expiry_mail(user) unless user.password_expired?
               end
             end
           end
         end
 
         def send_warning_password_expiry_mail(user)
-          return unless Setting.plugin_redmine_account_policy[:password_expiry_warn_days].to_i > 0 
+          return unless Setting.plugin_redmine_account_policy[:password_expiry_warn_days].to_i > 0
 
-          Mailer.notify_password_warn_expiry(user, 
+          Mailer.notify_password_warn_expiry(user,
                                              days_before_expiry(user)
                                             ).deliver unless user.nil?
         end
@@ -119,7 +119,7 @@ module RedmineAccountPolicy
         unless params[:token]
           # if a redirection is already occurring, do not redirect again to avoid
           # DoubleRenderErrors -- only available in Rails 3.2+
-          redirect_to signin_path unless performed?	
+          redirect_to signin_path unless performed?
           flash.clear
 
           flash[:notice] = l(:notice_account_lost_email_sent)
@@ -136,7 +136,7 @@ module RedmineAccountPolicy
       @seconds = Setting.plugin_redmine_account_policy[:account_lockout_duration].to_i.minutes
       counter = $invalid_credentials_cache[params[:username]]
 
-      # if the user is locked but not due to the plugin, delete them from the cache (this would only occur 
+      # if the user is locked but not due to the plugin, delete them from the cache (this would only occur
       # if the admin has locked the user intentionally, instead of the plugin doing it automatically)
       if is_locked?(user_from_login) && !temporarily_locked_by_plugin?(user_from_login)
         $invalid_credentials_cache.delete(params[:username])
@@ -149,8 +149,8 @@ module RedmineAccountPolicy
         user.activate! if temporarily_locked_by_plugin?(user)
       end
 
-      # if user is locked, and the lock is due to the plugin, skip the 
-      # password_authentication routine and go straight to the account_locked 
+      # if user is locked, and the lock is due to the plugin, skip the
+      # password_authentication routine and go straight to the account_locked
       # method. Also, spoof this behaviour if the user does not actually
       # exist in the database, but should be 'locked out'
       if user_from_login                                  \
@@ -174,12 +174,15 @@ module RedmineAccountPolicy
       user_from_login = User.where("login = ?", params[:username]).first
       counter = $invalid_credentials_cache[username]
 
+
+
       # check if username is blank or account policy is diabled
-      # also, if a user is *already locked*, but *not* because of failed logins 
-      # (such that they are not in the invalid credentials cache), don't enter 
+      # also, if a user is *already locked*, but *not* because of failed logins
+      # (such that they are not in the invalid credentials cache), don't enter
       # them into the cache (otherwise they can unlock themselves by
       # failing out and entering the right password)
       if username.blank? || lockout_duration == 0 || (counter.nil? && is_locked?(user_from_login))
+
         # because code already exposes locked accounts, ensure that 'locked account' message is returned on *every attempt*
         # otherwise, attackers can determine passwords of locked accounts
         if (counter.nil? && is_locked?(user_from_login))
@@ -191,6 +194,7 @@ module RedmineAccountPolicy
         end
         # now let's deal with invalid passwords
       else
+
         if counter.nil?
           # first failed attempt
           warn_failure(username, 1)
@@ -207,15 +211,20 @@ module RedmineAccountPolicy
             user_from_login.activate! if user_from_login
           end
         else
+
           if is_locked?(user_from_login) && !temporarily_locked_by_plugin?(user_from_login)
+
             # handles the case in which the user has been locked while
             # in the cache - delete them from the cache and redirect them to the locked page
             $invalid_credentials_cache.delete(username)
             account_locked_with_account_policy(user_from_login,signin_path)
 
           else
+
             # is counter, not a Time
             counter += 1
+
+            threshold= Setting.plugin_redmine_account_policy[:account_lockout_threshold].to_i
             if counter >= Setting.plugin_redmine_account_policy[:account_lockout_threshold].to_i
               user_from_login.lock! if user_from_login
               warn_lockout_starts(username)
@@ -232,7 +241,7 @@ module RedmineAccountPolicy
     def successful_authentication_with_account_policy(user)
       successful_authentication_without_account_policy(user)
 
-      @password_max_age = Setting.plugin_redmine_account_policy[:password_max_age].to_i.days  	
+      @password_max_age = Setting.plugin_redmine_account_policy[:password_max_age].to_i.days
       warn_threshold = Setting.plugin_redmine_account_policy[:password_expiry_warn_days].to_i
 
       if days_before_expiry(user) <= warn_threshold && days_before_expiry(user) > 0
@@ -241,7 +250,7 @@ module RedmineAccountPolicy
     end
 
     def counter_exists_and_is_time?(counter)
-      counter && counter.is_a?(Time)			
+      counter && counter.is_a?(Time)
     end
 
     private
@@ -257,9 +266,9 @@ module RedmineAccountPolicy
 
       # Check if user is locked AND in cache (implication: user was locked due to failed logins)
       # If so, flash lockout message instead of default user locked message
-      counter = $invalid_credentials_cache[users_login] 
+      counter = $invalid_credentials_cache[users_login]
 
-      if temporarily_locked_by_plugin?(user) || exists_in_cache_and_timed_out?(users_login) 
+      if temporarily_locked_by_plugin?(user) || exists_in_cache_and_timed_out?(users_login)
         flash_lockout(users_login)
       else
         account_locked_without_account_policy(user, signin_path)
@@ -269,7 +278,7 @@ module RedmineAccountPolicy
 
     # 1if a user is tracked by the failed login system and is timed out
     def exists_in_cache_and_timed_out?(username)
-      counter = $invalid_credentials_cache[params[:username]] 
+      counter = $invalid_credentials_cache[params[:username]]
       counter_exists_and_is_time?(counter) && ((counter + @seconds) > Time.now.utc)
 
     end
@@ -279,7 +288,7 @@ module RedmineAccountPolicy
       counter_exists_and_is_time?(counter) && ((counter + @seconds) > Time.now.utc)
     end
 
-    # if user is locked, they're in timeout, and the lock was due to 
+    # if user is locked, they're in timeout, and the lock was due to
     # the timeout, return true. Else, return false
     def temporarily_locked_by_plugin?(user)
       counter = $invalid_credentials_cache[user.login.downcase] unless user.nil?

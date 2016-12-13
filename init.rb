@@ -35,7 +35,7 @@ Redmine::Plugin.register :redmine_account_policy do
     account_lockout_duration:     '30',
     account_lockout_threshold:    '6',
     notify_on_failure:            'off',
-    notify_on_lockout:            'on',
+    notify_on_lockout:            'off',
 
     # unused accounts policy
     unused_account_max_age:       '90',

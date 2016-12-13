@@ -21,7 +21,7 @@ module RedmineAccountPolicy
 
           recipients << user.mail if notify_user == 'on'
 
-					puts recipients.inspect
+					#puts recipients.inspect
 
           mail to: recipients, subject: l(:rap_mail_subject_login_lockout)
         end

@@ -346,7 +346,7 @@ class AccountControllerTest < ActionController::TestCase
   # tests that an email is sent on a failed login attempt
   # if the setting is set
   test "mail_sent_on_bad_signin_if_setting_on" do
-    Setting.plugin_redmine_account_policy.update({notify_on_failure: 'on'})
+    Setting.update :redmine_account_policy, {notify_on_failure: 'on'}
 
     post(:login, {
       :username => @alice.login,
@@ -361,7 +361,7 @@ class AccountControllerTest < ActionController::TestCase
   # tests that no email is sent on a failed login attempt
   # if the setting is off
   test "no_mail_sent_on_bad_signin_if_setting_off" do
-    Setting.plugin_redmine_account_policy.update({notify_on_failure: 'off'})
+    Setting.update :redmine_account_policy, {notify_on_lockout: 'off'}
 
     post(:login, {
       :username => @alice.login,
@@ -376,7 +376,7 @@ class AccountControllerTest < ActionController::TestCase
   test "mail_sent_to_user_on_max_fails_if_setting_on" do
   	#p "----into test at #{Time.new.inspect}"
 
-    Setting.plugin_redmine_account_policy.update({notify_on_lockout: 'on'})
+    Setting.update :redmine_account_policy, {notify_on_lockout: 'on'}
     #Setting.plugin_redmine_account_policy = hash
     make_bad_login_attempts_until_one_before(@attempts + 1)
 
@@ -388,7 +388,6 @@ class AccountControllerTest < ActionController::TestCase
 	 	 		"Should sent email after failed login if setting on"
 
 	 	else
-	 	 	puts lockout_mail.bcc.inspect
 			assert lockout_mail.bcc.include?(@alice.mail),
 
 				#   assert_nil lockout_mail,
@@ -423,7 +422,7 @@ class AccountControllerTest < ActionController::TestCase
   # tests that no email is sent to the user
   # on max fails attempts reached if the setting is off
   test "no_mail_sent_to_user_on_max_fails_if_setting_off" do
-    Setting.plugin_redmine_account_policy.update({notify_on_lockout: 'off'})
+    Setting.update :redmine_account_policy, {notify_on_failure: 'off'}
     make_bad_login_attempts_until_one_before(@attempts + 1)
     lockout_mail = ActionMailer::Base.deliveries.last
 	 	unless lockout_mail

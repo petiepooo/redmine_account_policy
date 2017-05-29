@@ -19,7 +19,9 @@ module RedmineAccountPolicy
 
           recipients = User.active.select { |u| u.admin? }.map(&:mail)
 
-          recipients << user.mail if notify_user == 'on' 
+          recipients << user.mail if notify_user == 'on'
+
+					#puts recipients.inspect
 
           mail to: recipients, subject: l(:rap_mail_subject_login_lockout)
         end
@@ -27,7 +29,7 @@ module RedmineAccountPolicy
         def notify_password_warn_expiry(user, days_left)
           @user = user
 
-          mail to: user.mail, 
+          mail to: user.mail,
             subject: l(:rap_mail_subject_warn_expiry, days_left: days_left)
         end
 

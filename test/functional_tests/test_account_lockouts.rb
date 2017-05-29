@@ -1,4 +1,5 @@
 require File.expand_path('../../test_helper', __FILE__)
+#load 'test_refinements.rb'
 
 
 class AccountControllerTest < ActionController::TestCase
@@ -22,6 +23,7 @@ class AccountControllerTest < ActionController::TestCase
 
     # initialize a test user
     @alice = create_mock_user
+  	post(:logout, {:username => @mock_user.login})
 
     @attempts = 5
     @duration = 1
@@ -30,8 +32,13 @@ class AccountControllerTest < ActionController::TestCase
 
     @to_array = Array.new
 
+<<<<<<< HEAD
     set_plugin_setting(:account_lockout_duration, @duration)
     set_plugin_setting(:account_lockout_threshold, @attempts)
+=======
+    #setting.plugin_redmine_account_policy.update_settings({account_lockout_duration: @duration})
+    Setting.update :redmine_account_policy, {account_lockout_duration: @duration, account_lockout_threshold: @attempts}
+>>>>>>> dd805e5079af059560ce89386ed0d8b5c4dbec57
     Setting.lost_password = 1
   end
 
@@ -42,9 +49,12 @@ class AccountControllerTest < ActionController::TestCase
 
   # tests unused account lockout for daily cron
   test "unused_account_lockout_on_daily_cron" do
+<<<<<<< HEAD
     set_plugin_setting(:unused_account_max_age, @max_age)
+=======
+    Setting.update :redmine_account_policy, {unused_account_max_age: @max_age}
+>>>>>>> dd805e5079af059560ce89386ed0d8b5c4dbec57
     last_login_if_unused = Date.today - (@max_age + 1).days
-
     mock_user.update_column(:last_login_on, last_login_if_unused)
 
     run_daily_cron_with_reset
@@ -152,7 +162,7 @@ class AccountControllerTest < ActionController::TestCase
   test "temporary_lockout_on_max_fails" do
     make_bad_login_attempts_until_one_before(@attempts)
 
-    assert !mock_user.locked?, "Should be unlocked - #{mock_user.inspect}"
+    refute mock_user.locked?, "Should be unlocked - #{mock_user.inspect}"
 
     post(:login, {:username => @alice.login, :password => 'fakepassword'})
 
@@ -170,7 +180,7 @@ class AccountControllerTest < ActionController::TestCase
       :username => @alice.login,
       :password => @alice.password})
 
-    assert !mock_user.locked?,
+    refute mock_user.locked?,
       "Should unlock after lock - #{mock_user.inspect}"
   end
 
@@ -256,12 +266,12 @@ class AccountControllerTest < ActionController::TestCase
       :username => @alice.login,
       :password => @alice.password})
 
-    assert !mock_user.locked?, "Unlocked, reset count - #{mock_user.inspect}"
+    refute mock_user.locked?, "Unlocked, reset count - #{mock_user.inspect}"
 
     # make another set of login fails up to the threshold
     make_bad_login_attempts_until_one_before(@attempts)
 
-    assert !mock_user.locked?, "Still not locked - #{mock_user.inspect}"
+    refute mock_user.locked?, "Still not locked - #{mock_user.inspect}"
   end
 
 
@@ -295,7 +305,7 @@ class AccountControllerTest < ActionController::TestCase
 
   # tests that passwords can still be reset if in fails countdown
   test "allow_password_reset_while_in_failure_countdown" do
-    make_bad_login_attempts_until_one_before(@attempts)
+    make_bad_login_attempts_until_one_before(@attempts + 1)
 
     # creating Redmine's password recovery token to theorteically enable
     # password reset
@@ -405,7 +415,7 @@ class AccountControllerTest < ActionController::TestCase
 
     mock_user.activate!
 
-    assert !mock_user.locked?,
+    refute mock_user.locked?,
       "Should be unlocked after temp-lock - #{mock_user.inspect}"
   end
 
@@ -413,24 +423,28 @@ class AccountControllerTest < ActionController::TestCase
   test "user_can_be_unlocked_if_perm_locked" do
     mock_user.lock!
 
-    make_bad_login_attempts_until_one_before(@attempts + 1)
+    make_bad_login_attempts_until_one_before(@attempts +2)
 
     mock_user.activate!
 
-    assert !mock_user.locked?,
+    refute mock_user.locked?,
       "Should be unlocked after admin-lock - #{mock_user.inspect}"
   end
 
   # tests that an email is sent on a failed login attempt
   # if the setting is set
   test "mail_sent_on_bad_signin_if_setting_on" do
+<<<<<<< HEAD
     set_plugin_setting(:notify_on_failure, 'on')
+=======
+    Setting.update :redmine_account_policy, {notify_on_failure: 'on'}
+>>>>>>> dd805e5079af059560ce89386ed0d8b5c4dbec57
 
     post(:login, {
       :username => @alice.login,
       :password => 'fakepassword'})
 
-    assert !ActionMailer::Base.deliveries.empty?,
+    refute ActionMailer::Base.deliveries.empty?,
       "Should have sent mail after failed login"
     @to_array << @alice.mail
     are_recipients_correct?(@to_array, ActionMailer::Base.deliveries.last)
@@ -439,7 +453,11 @@ class AccountControllerTest < ActionController::TestCase
   # tests that no email is sent on a failed login attempt
   # if the setting is off
   test "no_mail_sent_on_bad_signin_if_setting_off" do
+<<<<<<< HEAD
     set_plugin_setting(:notify_on_failure, 'off')
+=======
+    Setting.update :redmine_account_policy, {notify_on_lockout: 'off'}
+>>>>>>> dd805e5079af059560ce89386ed0d8b5c4dbec57
 
     post(:login, {
       :username => @alice.login,
@@ -452,42 +470,79 @@ class AccountControllerTest < ActionController::TestCase
   # tests that an email is sent to the user and admins
   # on max fails attempts reached if the setting is set
   test "mail_sent_to_user_on_max_fails_if_setting_on" do
+<<<<<<< HEAD
     set_plugin_setting(:notify_on_lockout, 'on')
+=======
+  	#p "----into test at #{Time.new.inspect}"
+>>>>>>> dd805e5079af059560ce89386ed0d8b5c4dbec57
 
+    Setting.update :redmine_account_policy, {notify_on_lockout: 'on'}
+    #Setting.plugin_redmine_account_policy = hash
     make_bad_login_attempts_until_one_before(@attempts + 1)
 
     lockout_mail = ActionMailer::Base.deliveries.last
+		#puts "mail:#{lockout_mail.class}"
 
-    assert !ActionMailer::Base.deliveries.empty?,
-      "Should have sent mail after max lockouts reached"
+		unless lockout_mail
+	 	 	assert false,
+	 	 		"Should sent email after failed login if setting on"
 
-    @to_array << @alice.mail
+	 	else
+			assert lockout_mail.bcc.include?(@alice.mail),
 
-    admins = User.active.select { |u| u.admin? }.map(&:mail)
-
-    admins.each do |a|
-      @to_array << a.to_s
-    end
-
-    # TODO: Implement mails sent to parents on max fails
-    # Below code block will fail this test, so currently turned off
-    # using if false
-    if false
-      @parent = User.find_by_id(@alice.parent_id) if parent_exists?
-      @to_array << @parent.mail if @parent
-    end
-
-    are_recipients_correct?(@to_array, ActionMailer::Base.deliveries.last)
+				#   assert_nil lockout_mail,
+				#puts lockout_mail
+				#assert_nil lockout_mail,
+    		"Should have user as recipient after failed login if setting on"
+   	end
   end
+
+  #	refute ActionMailer::Base.deliveries.empty?,
+  #   "Should have sent mail after max lockouts reached"
+
+  #@to_array << @alice.mail
+
+  #admins = User.active.select { |u| u.admin? }.map(&:mail)
+
+  #admins.each do |a|
+  # @to_array << a.to_s
+  #end
+
+  # TODO: Implement mails sent to parents on max fails
+  # Below code block will fail this test, so currently turned off
+  # using if false
+  # if false
+  #  @parent = User.find_by_id(@alice.parent_id) if parent_exists?
+  #  @to_array << @parent.mail if @parent
+  #end
+
+  # are_recipients_correct?(@to_array, ActionMailer::Base.deliveries.last)
+  #end
 
 
   test "no_mail_sent_to_user_on_max_fails_if_setting_off" do
+<<<<<<< HEAD
     set_plugin_setting(:notify_on_lockout, 'off')
 
     make_bad_login_attempts_until_one_before(@attempts + 1)
 
     refute all_mail_recipients.include?(@alice.mail)
     "Should not have user as recipient after failed login if setting off"
+=======
+    Setting.update :redmine_account_policy, {notify_on_failure: 'off'}
+    make_bad_login_attempts_until_one_before(@attempts + 1)
+    lockout_mail = ActionMailer::Base.deliveries.last
+	 	unless lockout_mail
+	 	 	assert true
+	 	else
+			refute lockout_mail.bcc.include?(@alice.mail),
+				#   assert_nil lockout_mail,
+				#puts lockout_mail
+				#assert_nil lockout_mail,
+    		"Should not have user as recipient after failed login if setting off"
+
+   	end
+>>>>>>> dd805e5079af059560ce89386ed0d8b5c4dbec57
   end
 
 end 

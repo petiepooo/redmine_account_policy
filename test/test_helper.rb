@@ -3,95 +3,6 @@ require File.expand_path(File.dirname(__FILE__) + '/../../../test/test_helper')
 # Load plugin setting helpers
 require File.expand_path(File.dirname(__FILE__) + '/../lib/redmine_account_policy/plugin_settings_methods')
 
-module TestSetupMethods
-  include PluginSettingsMethods
-  # reset all settings
-  def reset_settings
-    # core settings
-    Setting.password_max_age = 0
-
-    # plugin settings
-    set_plugin_setting(:password_complexity, 0)
-    set_plugin_setting(:password_min_unique, 0)
-    set_plugin_setting(:password_expiry_warn_days, 0)
-    set_plugin_setting(:password_min_age, 0)
-    set_plugin_setting(:account_lockout_duration, 0)
-    set_plugin_setting(:account_lockout_threshold, 0)
-    set_plugin_setting(:notify_on_failure, 0)
-    set_plugin_setting(:notify_on_lockout, 0)
-    set_plugin_setting(:unused_account_max_age, 0)
-    set_plugin_setting(:account_policy_checked_on, nil )
-    set_plugin_setting(:notify_on_expiry, 0)
-  end
-
-  def create_user(login, pwd, email)
-    mock_user = User.create() do |u|
-      u.login                 = login
-      u.password              = pwd
-      u.password_confirmation = pwd
-      u.firstname             = login
-      u.lastname              = 'doe'
-      u.mail                  = email
-      u.language              = 'en'
-      u.mail_notification     = 'only_my_events'
-      u.must_change_passwd    = false
-      u.parent_id             = 1 if u.respond_to?(:parent_id=) # check for my_users
-      u.status                = 1
-      u.auth_source_id        = nil
-    end
-    # block below prints out all errors if validation fails
-    if mock_user.errors.any?
-      mock_user.errors.each do |attribute, message|
-        puts "Error - #{attribute} : #{message}"
-      end
-    end
-    mock_user
-  end
-
-  # creates a mock user
-  def create_mock_user(login = 'alice',
-                       pwd = repeat_str('1234567890'),
-                       email = 'alice@doe.com')
-    @mock_user = create_user(login, pwd, email)
-    @mock_user
-  end
-
-  # retrieves the mock user from the database
-  def mock_user
-    User.find_by_login(@mock_user.login)
-  end
-end
-
-
-module TestDailyMethods
-  include TestSetupMethods
-
-  def reset_daily_cron
-    set_plugin_setting(:account_policy_checked_on, nil)
-  end
-
-  # runs whatever task the plugin uses to lock expired users
-  def run_daily_cron
-    @mock_bob_login = 'bob'
-    @mock_bob_password = '1234567890'
-
-    if User.find_by_login(@mock_bob_login).nil?
-      @bob = create_user(@mock_bob_login, @mock_bob_password, 'bob@doe.com')
-    end
-
-    post(:login, {
-      :username => @mock_bob_login,
-      :password => @mock_bob_password})
-    assert_redirected_to my_page_path,
-      "Should have been able to login"
-  end
-
-  def run_daily_cron_with_reset
-    reset_daily_cron
-    run_daily_cron
-  end
-end
-
 module TestHelperMethods
   # returns when the user corresponding to the given login
   # last changed their password
@@ -139,10 +50,13 @@ module TestHelperMethods
 
   # posts bad logins until just before the threshold
   def make_bad_login_attempts_until_one_before(attempts)
+      #post(:logout, {:username => @mock_user.login})
     (1..(attempts-1)).each do
+#puts "make_bad_login_attempts_until_one_before:threshold: #{Setting.plugin_redmine_account_policy[:account_lockout_threshold]}"
       post(:login, {
         :username => @mock_user.login,
         :password => 'adkf'})
+ #     p '------a post done------'
     end
   end
 
@@ -153,6 +67,132 @@ module TestHelperMethods
         puts "Flash - #{key} : #{value}"
       end
     end
+  end
+end
+
+class Setting
+	def self.update(name, v)
+		plugin = :"plugin_#{name}"
+		setting = self[plugin].merge(v)
+		self[plugin] = setting
+	end
+end
+
+module TestSetupMethods
+<<<<<<< HEAD
+  include PluginSettingsMethods
+  # reset all settings
+  def reset_settings
+    # core settings
+    Setting.password_max_age = 0
+
+    # plugin settings
+    set_plugin_setting(:password_complexity, 0)
+    set_plugin_setting(:password_min_unique, 0)
+    set_plugin_setting(:password_expiry_warn_days, 0)
+    set_plugin_setting(:password_min_age, 0)
+    set_plugin_setting(:account_lockout_duration, 0)
+    set_plugin_setting(:account_lockout_threshold, 0)
+    set_plugin_setting(:notify_on_failure, 0)
+    set_plugin_setting(:notify_on_lockout, 0)
+    set_plugin_setting(:unused_account_max_age, 0)
+    set_plugin_setting(:account_policy_checked_on, nil )
+    set_plugin_setting(:notify_on_expiry, 0)
+=======
+
+#refine Setting do
+#	def self.rupdate(name, v)
+#		plugin = :"plugin_#{name}"
+#		setting = self[plugin].merge(v)
+#		self[plugin] = setting
+#	end
+#end
+
+	include TestHelperMethods
+#end
+  # reset all settings
+  def reset_settings
+    Setting.plugin_redmine_account_policy.update({password_complexity: 0})
+    Setting.plugin_redmine_account_policy.update({password_max_age: 0})
+    Setting.plugin_redmine_account_policy.update({password_min_unique: 0})
+    Setting.plugin_redmine_account_policy.update({password_expiry_warn_days: 0})
+    Setting.plugin_redmine_account_policy.update({password_min_age: 0})
+    Setting.plugin_redmine_account_policy.update({account_lockout_duration: 0})
+    Setting.plugin_redmine_account_policy.update({account_lockout_threshold: 0})
+     Setting.plugin_redmine_account_policy.update({notify_on_failure: 0})
+    Setting.plugin_redmine_account_policy.update({notify_on_lockout: 0})
+    Setting.plugin_redmine_account_policy.update({unused_account_max_age: 0})
+    Setting.plugin_redmine_account_policy.update({account_policy_checked_on: nil })
+>>>>>>> dd805e5079af059560ce89386ed0d8b5c4dbec57
+  end
+
+  def create_user(login, pwd, email)
+    mock_user = User.create() do |u|
+      u.login                 = login
+      u.password              = pwd
+      u.password_confirmation = pwd
+      u.firstname             = login
+      u.lastname              = 'doe'
+      u.mail                  = email
+      u.language              = 'en'
+      u.mail_notification     = 'only_my_events'
+      u.must_change_passwd    = false
+      u.parent_id             = 1 if u.respond_to?(:parent_id=) # check for my_users
+      u.status                = 1
+      u.auth_source_id        = nil
+    end
+    # block below prints out all errors if validation fails
+    if mock_user.errors.any?
+      mock_user.errors.each do |attribute, message|
+        puts "Error - #{attribute} : #{message}"
+      end
+    end
+    mock_user
+  end
+
+  # creates a mock user
+  def create_mock_user(login = 'alice',
+                       pwd = repeat_str('1234567890Ao.'),
+                       email = 'alice@doe.com')
+    @mock_user = create_user(login, pwd, email)
+    @mock_user
+  end
+
+  # retrieves the mock user from the database
+  def mock_user
+   # User.find_by_login(@mock_user.login)
+
+    User.find_by_login(@mock_user.login)
+ 	end
+end
+
+
+module TestDailyMethods
+  include TestSetupMethods
+
+  def reset_daily_cron
+    set_plugin_setting(:account_policy_checked_on, nil)
+  end
+
+  # runs whatever task the plugin uses to lock expired users
+  def run_daily_cron
+    @mock_bob_login = 'bob'
+    @mock_bob_password = '1234567890'
+
+    if User.find_by_login(@mock_bob_login).nil?
+      @bob = create_user(@mock_bob_login, @mock_bob_password, 'bob@doe.com')
+    end
+
+    post(:login, {
+      :username => @mock_bob_login,
+      :password => @mock_bob_password})
+    assert_redirected_to my_page_path,
+      "Should have been able to login"
+  end
+
+  def run_daily_cron_with_reset
+    reset_daily_cron
+    run_daily_cron
   end
 end
 
@@ -198,7 +238,13 @@ module TestMailerMethods
 
   # check if input recipients are in the input mail
   def are_recipients_correct?(users, mail)
+ # 	p "-------List of Users------"
+ # 	puts mail_recipients(mail).sort.uniq
+ # 	p "-----"
+ # 	puts users.sort.uniq
     @user_diff = users.sort.uniq - mail_recipients(mail).sort.uniq
+ #   p "------List of missing users----"
+ #   puts @user_diff
     assert @user_diff.empty?,
       "Recipients #{@user_diff.to_s} should be in mail: #{mail.subject}"
   end

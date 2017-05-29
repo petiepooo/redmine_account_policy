@@ -15,7 +15,7 @@ en:
 
     # == password expiry == #
   rap_setting_password_expiry:        'Password Expiry'
-  rap_setting_password_max_age:       'Maximum password age'
+  rap_setting_password_max_age_html:  'From your Settings -> Authentication tab, passwords expire in <b>%{pw_setting}</b> days'
   rap_setting_password_expiry_warn_a: 'Email warning notifications start'
   rap_setting_password_expiry_warn_b: 'before password expiration'
   rap_notice_password_expired:        'Your password has expired.'
@@ -55,6 +55,9 @@ en:
   rap_mail_body_login_lockout_header: 'Maximum allowed login attempts reached'
   rap_mail_body_login_failure:        'An unsuccessful attempt to login to your account was made from %{ip_address}.'
   rap_mail_body_login_lockout:        'Your account "%{name}" [%{login}] reached its maximum allowed number fo failed login attempts.  The last attempt was from %{ip_address}.  Your account has been locked for %{lockout_duration} minutes.'
+  rap_mail_subject_expired_account_header:   'Expiration date reached - Account Locked out'
+  rap_mail_body_expired_account:      'Your account "{name}" [%{login}] has been locked, you have reached the end of your contract date. Please speak to your manager to gain access to your RDQ account.'
+  
 
   rap_account_locked_due_to_account_policy: 'Unlock (locked due to max fails - please hover)'
   rap_alt_account_locked_due_to_account_policy: 'This account has been locked because it has reached the maximum number of failed login attempts. To lock this account such that the user cannot unlock themselves once their timeout expires, please unlock and re-lock this user account.'
@@ -64,8 +67,12 @@ en:
   rap_setting_unused_account:         'Unused/Dormant Accounts'
   rap_setting_unused_account_max_age: 'Deactivate accounts not used for'
 
+    # == expired accounts == #
+    # rap_mail_subject_expired_account:   'Your account "%{name}" [%{login}] has been locked, please speak to your manager to gain access to your account.' 
 
     # == daily cron == #
   rap_setting_account_policy_checked_on: 'Account policies last checked on'
+
+  rap_field_expiry_date: 'Expiration Date'
 
   notice_account_lost_email_sent:        'An email with instructions to choose a new password will be sent to you if this account exists and is unlocked!' 

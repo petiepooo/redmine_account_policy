@@ -1,0 +1,7 @@
+<p><%=l(:rap_mail_subject_expired_account_header)%></p>
+<hr />
+<p><%=l(:rap_mail_body_expired_account,
+        name: @user.name,
+				login: @user.login,
+				ip_address: @ip_address,
+				)%></p>

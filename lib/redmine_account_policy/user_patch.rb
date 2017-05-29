@@ -2,6 +2,7 @@ module RedmineAccountPolicy
   module Patches
     module UserPatch
 
+
       def self.included(base)
         base.send(:include, InstanceMethods)
         # == password complexity == #
@@ -40,7 +41,7 @@ module RedmineAccountPolicy
 
         # TODO: should be in, for example, an ApplicationPatch module
         def password_max_age
-          Setting.plugin_redmine_account_policy[:password_max_age].to_i
+          Setting.password_max_age.to_i
         end
 
         # TODO: should be in, for example, an ApplicationPatch module
@@ -91,6 +92,11 @@ module RedmineAccountPolicy
           unused_account_max_age > 0
         end
 
+       #returns true if expiry is enabled, false if expiry is not set; nil  
+       def account_expiry_enabled? 
+         !expiry_date.nil? 
+       end 
+
         def account_unused?
           return false unless unused_account_policy_enabled?
 
@@ -105,11 +111,11 @@ module RedmineAccountPolicy
 
           count = 0
           count += 1 if password =~ /[A-Z]/
-          count += 1 if password =~ /[a-z]/
-          count += 1 if password =~ /[0-9]/
-          count += 1 if password =~ /[^A-Za-z0-9]/
+            count += 1 if password =~ /[a-z]/
+            count += 1 if password =~ /[0-9]/
+            count += 1 if password =~ /[^A-Za-z0-9]/
 
-          count >= complexity
+            count >= complexity
         end
 
         def unique_enough?(password)

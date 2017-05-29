@@ -1,0 +1,4 @@
+<p>
+<label for='user_expiry_date'><%= l(:rap_field_expiry_date) %></label>
+<%= date_field_tag 'user[expiry_date]', '', :value => @user[:expiry_date], :size => 10 %><%= calendar_for('user_expiry_date') %>
+</p>

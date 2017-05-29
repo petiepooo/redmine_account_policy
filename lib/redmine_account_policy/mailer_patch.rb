@@ -33,6 +33,11 @@ module RedmineAccountPolicy
             subject: l(:rap_mail_subject_warn_expiry, days_left: days_left)
         end
 
+        def notify_account_expiry(user) 
+          @user = user 
+          mail to: user.mail, subject: l(:rap_mail_subject_expired_account_header)
+        end 
+        
         def notify_password_is_expired(user)
           @user = user
           mail to: user.mail, subject: l(:rap_mail_subject_warn_expiry)

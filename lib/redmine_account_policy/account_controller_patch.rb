@@ -1,3 +1,5 @@
+require File.expand_path(File.dirname(__FILE__) + '/plugin_settings_methods')
+
 module RedmineAccountPolicy
   module Patches
     module AccountControllerPatch
@@ -9,15 +11,27 @@ module RedmineAccountPolicy
       end
 
       module DailyCronMethods
+        include PluginSettingsMethods
         def run_account_policy_daily_tasks
           Rails.logger.info { "#{Time.now.utc}: Account Policy: Running daily tasks" }
 
+          lock_expired_accounts!            # lock expired accounts
           expire_old_passwords!             # password expiry
           lock_unused_accounts!             # lock unused accounts
           purge_expired_invalid_credentials # failed logins
           send_expiration_warnings          # expiration warnings
 
-          Setting.plugin_redmine_account_policy.update({account_policy_checked_on: Date.today.strftime("%Y-%m-%d")})
+          set_plugin_setting(:account_policy_checked_on, Date.today.strftime("%Y-%m-%d"))
+        end
+
+        def lock_expired_accounts!
+          #only run on active users
+         User.where(type: 'User', status: [User::STATUS_REGISTERED, User::STATUS_ACTIVE]).each do |user|
+             if user.account_expiry_enabled? && user.expiry_date <= Date.today
+              user.lock!
+              Mailer.notify_account_expiry(user).deliver
+            end
+          end
         end
 
         # enable must_change_passwd for all expired users.
@@ -26,14 +40,20 @@ module RedmineAccountPolicy
             if user.password_expired?
               user.update_attribute(:must_change_passwd, true)
               #send expiration notification email
+<<<<<<< HEAD
               Mailer.notify_password_is_expired(user).deliver
             end
           end
+=======
+              Mailer.notify_password_is_expired(user).deliver 
+            end			
+          end 
+>>>>>>> 24fdd18d9377183951d1973cf60eadeb83379f6e
         end
 
         def lock_unused_accounts!
           User.where(type: 'User', status: [User::STATUS_REGISTERED, User::STATUS_ACTIVE]).each do |user|
-            if user.account_unused?
+            if user.account_unused? && !user.account_expiry_enabled?
               user.update_attribute(:must_change_passwd, true) if user.password_expired?
               user.lock!
             end
@@ -54,7 +74,11 @@ module RedmineAccountPolicy
         end
 
         def send_expiration_warnings
+<<<<<<< HEAD
           @password_max_age = Setting.plugin_redmine_account_policy[:password_max_age].to_i.days
+=======
+          @password_max_age = Setting.password_max_age.to_i.days
+>>>>>>> 24fdd18d9377183951d1973cf60eadeb83379f6e
 
           @warn_threshold = Setting.plugin_redmine_account_policy[:password_expiry_warn_days].to_i
 
@@ -241,7 +265,11 @@ module RedmineAccountPolicy
     def successful_authentication_with_account_policy(user)
       successful_authentication_without_account_policy(user)
 
+<<<<<<< HEAD
       @password_max_age = Setting.plugin_redmine_account_policy[:password_max_age].to_i.days
+=======
+      @password_max_age = Setting.password_max_age.to_i.days
+>>>>>>> 24fdd18d9377183951d1973cf60eadeb83379f6e
       warn_threshold = Setting.plugin_redmine_account_policy[:password_expiry_warn_days].to_i
 
       if days_before_expiry(user) <= warn_threshold && days_before_expiry(user) > 0
